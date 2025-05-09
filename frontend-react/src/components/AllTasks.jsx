@@ -17,7 +17,6 @@ export default function AllTasks(){
     fetchTasks();
   }, []);
 
-  // Função para buscar tarefas
   const fetchTasks = async () => {
     try {
       const res = await axios.get('http://localhost:3000/tasks');
