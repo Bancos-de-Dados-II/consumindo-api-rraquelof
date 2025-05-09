@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 export default function AllTasks(){
@@ -31,15 +31,24 @@ export default function AllTasks(){
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const formattedDate = form.date.includes('/') 
+      ? form.date.split('/').reverse().join('-') 
+      : form.date;
+
+      const taskData = {
+      ...form,
+      date: formattedDate
+    };
+
       if(isUpdating){
-        await axios.put(`http://localhost:3000/tasks${currentTaskId}`,form);
+        await axios.put(`http://localhost:3000/tasks/${currentTaskId}`,taskData);
         setIsUpdating(false);
         setCurrentTaskId(null);
       }else{
         await axios.post('http://localhost:3000/tasks', form);
-        setForm({title: '', description: '', type: 'Pessoal', date:''});
-        fetchTasks();
       }
+      setForm({title: '', description: '', type: 'Pessoal', date:''});
+      fetchTasks();
     } catch (error) {
       console.error('Erro ao criar ou atualizar tarefa:', error);
     }    
@@ -57,14 +66,15 @@ export default function AllTasks(){
 
   // Função preencher formulário em edição de tarefa
   const handleUpdateClick = (task) =>{
+    const formattedDate = task.date ? task.date.split('-').reverse().join('/') : '';
     setForm({
       title: task.title,
       description: task.description,
       type: task.type,
-      date: task.date ? task.date.split('T')[0] : '',
+      date: formattedDate,
     });
     setIsUpdating(true);
-    setCurrentTaskId(task.id)
+    setCurrentTaskId(task.id);
   };
 
   return(
@@ -93,7 +103,7 @@ export default function AllTasks(){
         </select>
         <input
           type="date"
-          value={form.date}
+          value={form.date ? form.date.split('/').reverse().join('-') : ''}
           onChange={(e) => setForm({ ...form, date: e.target.value })}
         />
         <button type='submit'>
@@ -102,13 +112,13 @@ export default function AllTasks(){
       </form>
 
     {tasks.length === 0 ? (
-        <p class="no-tasks-message">Nenhuma tarefa encontrada.</p>
+        <p className="no-tasks-message">Nenhuma tarefa encontrada.</p>
       ) : (
         <ul>
           {tasks.map((task) => (
             <li key={task.id} >
               <strong>{task.title}</strong> - {task.description}<br />
-              <em>{task.type}</em> - {task.date ? new Date(task.date).toLocaleDateString() : 'Sem data'}<br />
+              <em>{task.type}</em> -  {task.date ? task.date : 'Sem data'}<br />
               <button onClick={() => handleUpdateClick(task)}>Atualizar</button>
               <button onClick={() => deleteTask(task.id)}>Deletar</button>
             </li>
